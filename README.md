@@ -1,10 +1,8 @@
 # Gomoku Player
 **Perfom the Gomoku Player by BFS search to win the game.**
-- - - 
 
 ## Using Language
 **Prolog**
-- - -
 
 ## Implementation
 * In each step will concern the situation within the next 3 steps.
@@ -12,7 +10,6 @@
 * To follow those rules and extra rules, I set the general restriction to avoid foul.
     * Because first player has a strong advantage, there are some extra rules for black player.
     * Please check [here](https://renju.nu/gomoku-rules/) for more rules information.
-- - -
 
 ## Two stage to construct the player
 **To simplify this project, the player can split into 2 parts** 
