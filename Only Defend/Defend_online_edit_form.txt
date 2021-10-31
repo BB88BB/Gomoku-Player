@@ -1,0 +1,58 @@
+:- dynamic black/2.
+:- dynamic white/2.
+:- dynamic im_white/0.
+:- dynamic im_black/0.
+:- dynamic needstone/2.
+
+
+query(Q) :- 
+    (Q -> writeln(yes) ; writeln(no)).
+
+read_predicates :-
+	assert(black(7, 9)),
+	assert(black(8, 9)),
+	assert(black(9, 9)),
+    assert(white(6, 8)),
+    assert(white(7, 8)),
+	assert(black(8, 8)),
+	assert(black(9, 8)),
+	assert(white(7, 7)),
+    assert(white(10, 7)).
+
+valid(X, Y) :- X > 0, X < 16, Y > 0, Y < 16, 
+    		\+black(X, Y), \+white(X, Y). 
+
+process :-
+    player, 
+    (im_black ->  writeln(im_black); im_white ->  writeln(im_white)),
+	run_whole_map.   
+
+player :-
+    aggregate_all(count, black(_, _), Count_black),
+    aggregate_all(count, white(_, _), Count_white),
+    Count_black > Count_white ->  assert(im_white);
+    Count_black = Count_white ->  assert(im_black).
+
+run_whole_map :- 
+    forall((member(H, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]),
+           member(V, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])),
+    (Positions = [H, V], test(Positions))),
+    writeln(end).
+
+test([X, Y]):-
+	valid(X, Y) ->  true;
+    %true if this position can't calculate the answer
+    im_black, white(X, Y) -> rival_win(X, Y); 
+    im_white, black(X, Y) -> rival_win(X, Y);
+    true.
+test([]).
+
+rival_win(X, Y):-
+    writeln(X), writeln(Y),
+    true.
+
+main :-
+    read_predicates,
+	process.
+%    valid(0,8).  %print true/false
+    

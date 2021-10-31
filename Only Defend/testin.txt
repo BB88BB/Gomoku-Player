@@ -1,0 +1,69 @@
+ 	assert(black(7, 6)),
+	assert(black(7, 7)),
+    assert(black(7, 8)),
+	assert(black(7, 10)).
+%    assert(black(8, 9)),
+%    assert(black(9, 10)).
+
+
+test1
+
+	assert(black(7, 9)),
+	assert(black(8, 9)),
+	assert(black(9, 9)),
+    assert(white(6, 8)),
+    assert(white(7, 8)),
+	assert(black(8, 8)),
+	assert(black(9, 8)),
+	assert(white(7, 7)),
+    assert(white(8, 7)).
+
+
+test2
+	assert(black(7, 11)),
+	assert(black(7, 10)),
+
+    assert(white(8, 10)),
+	assert(black(7, 8)),
+
+    assert(white(8, 7)).
+
+test3
+	assert(black(7, 11)),
+	assert(black(7, 10)),
+
+    assert(white(8, 10)),
+    assert(white(8, 9)),
+    assert(black(9, 9)),
+ 
+	assert(black(7, 8)),
+	assert(black(9, 8)),
+    assert(white(8, 6)),
+    assert(white(8, 7)).
+
+test4
+	assert(black(11, 8)),
+	assert(black(11, 7)),
+    assert(black(10, 8)),
+	assert(black(9, 8)),
+    assert(black(8, 9)),
+    assert(black(8, 8)),
+    assert(black(7, 9)),
+    assert(black(7, 7)),
+    assert(white(6, 10)),
+    assert(white(6, 9)),
+    assert(white(6, 8)),
+    assert(white(8, 7)),
+    assert(white(9, 7)),
+    assert(white(10, 7)),    
+    assert(white(8, 6)),    
+    assert(white(9, 6)).
+
+test5
+	assert(black(7, 11)),
+	assert(black(7, 10)),
+
+    assert(white(8, 10)),
+	assert(black(7, 8)),
+
+    assert(white(8, 7)).

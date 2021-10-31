@@ -1,0 +1,350 @@
+:- initialization main, halt.
+
+:- dynamic black/2.
+:- dynamic white/2.
+:- dynamic im_white/0.
+:- dynamic im_black/0.
+
+:- dynamic rival_candidate/2.
+:- dynamic rival_can/2.
+:- dynamic rival_tmp/2.
+:- dynamic rival_four/2.
+:- dynamic rival_three/2.
+:- dynamic rival_three_three/2.
+:- dynamic rival_22/2.
+
+:- dynamic my_candidate/2.
+:- dynamic my_can/2.
+:- dynamic my_can2/2.
+:- dynamic my_tmp/2.
+:- dynamic my_four/2.
+:- dynamic my_three/2.
+:- dynamic my_three_three/2.
+:- dynamic my_22/2.
+
+:- dynamic other/2.
+
+
+%---------------------preprocessing------------------------
+read_predicates([H|T]) :-
+    read_line_to_codes(user_input, H),
+    H \= end_of_file,
+    string_codes(Input, H),
+    term_string(Term, Input),
+    assert(Term),
+    read_predicates(T).    
+read_predicates([]).
+
+whoami:-
+    aggregate_all(count, black(_, _), Cb),
+    aggregate_all(count, white(_, _), Cw),
+    Count_black is Cb, Count_white is Cw,
+    Count_black > Count_white ->  assert(im_white);
+    Count_black = Count_white ->  assert(im_black).
+
+nostones:-
+    aggregate_all(count, black(_, _), Cb),    
+    Cb == 0 -> true; false.
+
+%---------------------preprocessing------------------------
+final_output:-
+    my_four(A1, A2), writeAns(A1, A2), !;
+    rival_four(A1, A2),  writeAns(A1, A2), !;
+
+    my_three_three(T1, T2), writeAns(T1, T2), !;
+    rival_three_three(T1, T2), writeAns(T1, T2), !;
+
+    my_three(A1, A2), writeAns(A1, A2), !;
+    rival_three(T1, T2),  writeAns(T1, T2), !; 
+
+    rival_22(I1, I2), writeAns(I1, I2), !;      
+    my_22(I1, I2), writeAns(I1, I2), !;    
+    
+    
+    my_can(B1, B2), writeAns(B1, B2), !;
+    rival_can(C1, C2), writeAns(C1, C2), !;
+
+    my_can2(C1, C2), writeAns(C1, C2), !;
+    
+    other(V1, V2), writeAns(V1, V2), !.
+
+
+% run through all location in this map, 15*15
+process:-
+    forall((member(H, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]),
+           member(V, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])),
+    (Positions = [H, V], test(Positions), choose(Positions); true)).
+ 
+choose([X, Y]):-
+    rival_can(X, Y), isfoul(X, Y) -> retractall(rival_can(X, Y));
+    my_can(X, Y), isfoul(X, Y) -> retractall(my_can(X, Y));
+    other(X, Y), isfoul(X, Y) ->  retractall(other(X, Y));
+    
+    my_can(X, Y), count_my_33(X, Y);   
+    my_can(X, Y), count_my_3(X, Y); 
+    other(X, Y), count_my_22(X, Y);
+    
+    rival_can(X, Y), count_rival_33(X, Y);   
+    rival_can(X, Y), count_rival_3(X, Y);  
+    other(X, Y), count_rival_22(X, Y);
+    
+    other(X, Y), count_my_2(X, Y);
+    true. 
+
+count_my_22(X, Y):-
+    countmystones(X, Y, 0, 1, 0, Vup), countmystones(X, Y, 0, -1, 0, Vdn),
+    	V is (Vup + Vdn),
+    countmystones(X, Y, 1, 0, 0, Hup), countmystones(X, Y, -1, 0, 0, Hdn),
+    	H is (Hup + Hdn),
+    countmystones(X, Y, 1, 1, 0, DLup), countmystones(X, Y, -1, -1, 0, DLdn),
+    	DL is (DLup + DLdn),
+    countmystones(X, Y, -1, 1, 0, DRup), countmystones(X, Y, 1, -1, 0, DRdn),
+    	DR is (DRup + DRdn),
+         
+    ((V==2, H==2); (V==2, DL==2); (V==2, DR==2);
+      (H==2, DL==2); (H==2, DR==2); (DL==2, DR==2)), assert(my_22(X, Y)), true;
+	false.
+
+count_my_33(X, Y):-
+    countmystones(X, Y, 0, 1, 0, Vup), countmystones(X, Y, 0, -1, 0, Vdn),
+    	V is (Vup + Vdn),
+    countmystones(X, Y, 1, 0, 0, Hup), countmystones(X, Y, -1, 0, 0, Hdn),
+    	H is (Hup + Hdn),
+    countmystones(X, Y, 1, 1, 0, DLup), countmystones(X, Y, -1, -1, 0, DLdn),
+    	DL is (DLup + DLdn),
+    countmystones(X, Y, -1, 1, 0, DRup), countmystones(X, Y, 1, -1, 0, DRdn),
+    	DR is (DRup + DRdn),
+         
+    ((V==3, H==3); (V==3, DL==3); (V==3, DR==3);
+      (H==3, DL==3); (H==3, DR==3); (DL==3, DR==3)), assert(my_three_three(X, Y)), true;
+	false.
+
+
+count_my_3(X, Y):-
+    countmystones(X, Y, 0, 1, 0, Vup), countmystones(X, Y, 0, -1, 0, Vdn),
+    	V is (Vup + Vdn), (V==3, assert(my_three(X, Y)); true),
+    countmystones(X, Y, 1, 0, 0, Hup), countmystones(X, Y, -1, 0, 0, Hdn),
+    	H is (Hup + Hdn), (H==3, assert(my_three(X, Y)); true),
+    countmystones(X, Y, 1, 1, 0, DLup), countmystones(X, Y, -1, -1, 0, DLdn),
+    	DL is (DLup + DLdn), (DL==3, assert(my_three(X, Y)); true),
+    countmystones(X, Y, -1, 1, 0, DRup), countmystones(X, Y, 1, -1, 0, DRdn),
+    	DR is (DRup + DRdn),(DR==3, assert(my_three(X, Y)); true),
+    true.
+
+count_my_2(X, Y):-
+    countmystones(X, Y, 0, 1, 0, Vup), countmystones(X, Y, 0, -1, 0, Vdn),
+    	V is (Vup + Vdn), (V==2, assert(my_can2(X, Y)); true),
+    countmystones(X, Y, 1, 0, 0, Hup), countmystones(X, Y, -1, 0, 0, Hdn),
+    	H is (Hup + Hdn), (H==2, assert(my_can2(X, Y)); true),
+    countmystones(X, Y, 1, 1, 0, DLup), countmystones(X, Y, -1, -1, 0, DLdn),
+    	DL is (DLup + DLdn), (DL==2, assert(my_can2(X, Y)); true),
+    countmystones(X, Y, -1, 1, 0, DRup), countmystones(X, Y, 1, -1, 0, DRdn),
+    	DR is (DRup + DRdn),(DR==2, assert(my_can2(X, Y)); true),
+    true.
+
+
+count_rival_22(X, Y):-
+    countstones(X, Y, 0, 1, 0, Vup), countstones(X, Y, 0, -1, 0, Vdn),
+    	V is (Vup + Vdn), 
+    countstones(X, Y, 1, 0, 0, Hup), countstones(X, Y, -1, 0, 0, Hdn),
+    	H is (Hup + Hdn),
+    countstones(X, Y, 1, 1, 0, DLup), countstones(X, Y, -1, -1, 0, DLdn),
+    	DL is (DLup + DLdn),
+    countstones(X, Y, -1, 1, 0, DRup), countstones(X, Y, 1, -1, 0, DRdn),
+    	DR is (DRup + DRdn),
+
+    ((V==2, H==2); (V==2, DL==2); (V==2, DR==2);
+      (H==2, DL==2); (H==2, DR==2); (DL==2, DR==2)), assert(rival_22(X, Y)), true;
+	false.
+
+
+count_rival_33(X, Y):-
+    countstones(X, Y, 0, 1, 0, Vup), countstones(X, Y, 0, -1, 0, Vdn),
+    	V is (Vup + Vdn), 
+    countstones(X, Y, 1, 0, 0, Hup), countstones(X, Y, -1, 0, 0, Hdn),
+    	H is (Hup + Hdn),
+    countstones(X, Y, 1, 1, 0, DLup), countstones(X, Y, -1, -1, 0, DLdn),
+    	DL is (DLup + DLdn),
+    countstones(X, Y, -1, 1, 0, DRup), countstones(X, Y, 1, -1, 0, DRdn),
+    	DR is (DRup + DRdn),
+
+    ((V==3, H==3); (V==3, DL==3); (V==3, DR==3);
+      (H==3, DL==3); (H==3, DR==3); (DL==3, DR==3)), assert(rival_three_three(X, Y)), true;
+	false.
+
+count_rival_3(X, Y) :-
+	countstones(X, Y, 0, 1, 0, Vup), countstones(X, Y, 0, -1, 0, Vdn),
+    	V is (Vup + Vdn), (V==3, assert( rival_three(X, Y)); true),
+    countstones(X, Y, 1, 0, 0, Hup), countstones(X, Y, -1, 0, 0, Hdn),
+    	H is (Hup + Hdn), (H==3, assert( rival_three(X, Y)); true),
+    countstones(X, Y, 1, 1, 0, DLup), countstones(X, Y, -1, -1, 0, DLdn),
+    	DL is (DLup + DLdn), (DL==3, assert( rival_three(X, Y)); true),
+    countstones(X, Y, -1, 1, 0, DRup), countstones(X, Y, 1, -1, 0, DRdn),
+    	DR is (DRup + DRdn),(DR==3, assert( rival_three(X, Y)); true),
+    
+    true.
+
+
+
+valid(X, Y):- X > 0, X < 16, Y > 0, Y < 16, 
+    		\+black(X, Y), \+white(X, Y). 
+
+% if no have stone here, return true.
+nothavestone(X, Y):- 
+    (black(X, Y); white(X, Y)) ->  false;              
+    true. 
+
+% if no surrounding, pruning (test if there have any stone in 8 location)
+nosurrounding(X, Y):-
+    forall( ( member(Detx, [0, 1, -1]), member(Dety, [0, 1, -1]) ),
+ 		    ( X1 is X + Detx, Y1 is Y + Dety, nothavestone(X1, Y1)) 
+          ).
+
+test([X, Y]):- 
+    valid(X, Y), \+nosurrounding(X, Y), 
+    ( \+judge(X, Y) ->  true;
+		assert(rival_tmp(X, Y)), step2, retractall(rival_tmp(X, Y)),
+        assert(my_tmp(X, Y)), step3, retractall(my_tmp(X, Y)),
+        assert(other(X, Y))
+    );
+    true.
+
+test2([X, Y]):- 
+    valid(X, Y), \+nosurrounding(X, Y), 
+    rivaliswin(X, Y) -> 
+ 	    rival_tmp(M, N), 
+    	assert(rival_can(M, N)), retractall(rival_tmp(M, N)), false;
+    true.
+
+test3([X, Y]):- 
+    valid(X, Y), \+nosurrounding(X, Y), 
+    iwin(X, Y) -> 
+ 	    my_tmp(M, N), 
+    	assert(my_can(M, N)), retractall(my_tmp(M, N)), false;
+    true.
+
+step2:-
+    forall((member(H, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]),
+           member(V, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])),   	
+            (Positions = [H, V], test2(Positions))).
+
+step3:-
+    forall((member(H, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]),
+           member(V, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])),   	
+            (Positions = [H, V], test3(Positions))).
+
+judge(X, Y):-
+    rivaliswin(X, Y) -> assert(rival_four(X, Y)), false; % already have four
+    iwin(X, Y) -> assert(my_four(X, Y)), false;
+    isfoul(X, Y) ->  false;
+    
+	true.
+
+countblackstones(X, Y, Detx, Dety, Cs, S):-    
+    Xx is (X + Detx), Yy is (Y + Dety), black(Xx, Yy) -> 
+    	Cs1 is Cs + 1, countblackstones(Xx, Yy, Detx, Dety, Cs1, S); 
+    Cs==2, Xx is (X + Detx), Yy is (Y + Dety),  white(Xx, Yy) -> S is Cs-1;    
+    S is Cs.    
+
+countblackjump(X, Y, Detx, Dety, Cj, J):-
+    Xx is (X + Detx), Yy is (Y + Dety), \+valid(Xx, Yy) ->  J is Cj;
+    Xx is (X + Detx), Yy is (Y + Dety), valid(Xx, Yy), Xxx is (Xx + Detx), Yyy is (Yy + Dety), black(Xxx, Yyy) -> 
+    	countblackstones(Xx, Yy, Detx, Dety, Cj, J);
+	J is Cj.
+
+
+iwin(X, Y):-
+	countmystones(X, Y, 0, 1, 0, Up_straight), countmystones(X, Y, 0, -1, 0, Down_straight),
+    	Straight is (Up_straight + Down_straight), Straight == 4 ->  true;
+    countmystones(X, Y, 1, 0, 0, Up_straight), countmystones(X, Y, -1, 0, 0, Down_straight),
+    	Straight is (Up_straight + Down_straight), Straight == 4 ->  true;  
+    countmystones(X, Y, 1, 1, 0, Up_straight), countmystones(X, Y, -1, -1, 0, Down_straight),
+    	Straight is (Up_straight + Down_straight), Straight == 4 ->  true;	
+    countmystones(X, Y, -1, 1, 0, Up_straight), countmystones(X, Y, 1, -1, 0, Down_straight),
+    	Straight is (Up_straight + Down_straight), Straight == 4 ->  true;         
+	false.
+
+
+countmystones(X, Y, Detx, Dety, Cs, S):-
+    Xx is (X + Detx), Yy is (Y + Dety), ism2(Xx, Yy) -> 
+    	Cs1 is Cs + 1, countmystones(Xx, Yy, Detx, Dety, Cs1, S); 
+    S is Cs.
+
+rivaliswin(X, Y):-
+	countstones(X, Y, 0, 1, 0, Up_straight), countstones(X, Y, 0, -1, 0, Down_straight),
+    	Straight is (Up_straight + Down_straight), Straight == 4 ->  true;
+    countstones(X, Y, 1, 0, 0, Up_straight), countstones(X, Y, -1, 0, 0, Down_straight),
+    	Straight is (Up_straight + Down_straight), Straight == 4 ->  true;  
+    countstones(X, Y, 1, 1, 0, Up_straight), countstones(X, Y, -1, -1, 0, Down_straight),
+    	Straight is (Up_straight + Down_straight), Straight == 4 ->  true;	
+    countstones(X, Y, -1, 1, 0, Up_straight), countstones(X, Y, 1, -1, 0, Down_straight),
+    	Straight is (Up_straight + Down_straight), Straight == 4 ->  true;         
+	false.
+
+
+countstones(X, Y, Detx, Dety, Cs, S):-
+    Xx is (X + Detx), Yy is (Y + Dety), ism(Xx, Yy) -> 
+    	Cs1 is Cs + 1, countstones(Xx, Yy, Detx, Dety, Cs1, S); 
+    S is Cs.
+
+ism2(X, Y):-
+    im_white, white(X, Y) ->  true;
+    im_black, black(X, Y) ->  true;
+    my_tmp(X, Y) ->  true ;
+    false.
+
+ism(X, Y):-
+    im_white, black(X, Y) ->  true;
+    im_black, white(X, Y) ->  true;
+    rival_tmp(X, Y) ->  true ;
+    false.
+
+isfoul(X, Y):-
+    countblackstones(X, Y, 0, 1, 0, Vup), countblackstones(X, Y, 0, -1, 0, Vdn), 
+    countblackjump(X, Y, 0, -1, 0, Vjup), countblackjump(X, Y, 0, -1, 0, Vjdn), 
+    	V is (Vup + Vdn + Vjup + Vjdn), Vs is (Vup + Vdn),
+    countblackstones(X, Y, 1, 0, 0, Hup), countblackstones(X, Y, -1, 0, 0, Hdn),
+    countblackjump(X, Y, 0, -1, 0, Hjup), countblackjump(X, Y, 0, -1, 0, Hjdn), 
+    	H is (Hup + Hdn + Hjup + Hjdn), Hs is (Hup + Hdn),
+    countblackstones(X, Y, 1, 1, 0, DLup), countblackstones(X, Y, -1, -1, 0, DLdn),
+    countblackjump(X, Y, 0, -1, 0, DLjup), countblackjump(X, Y, 0, -1, 0, DLjdn), 
+    	DL is (DLup + DLdn + DLjup + DLjdn), DLs is (DLup + DLdn),
+    countblackstones(X, Y, -1, 1, 0, DRup), countblackstones(X, Y, 1, -1, 0, DRdn),
+    countblackjump(X, Y, 0, -1, 0, DRjup), countblackjump(X, Y, 0, -1, 0, DRjdn),     
+    	DR is (DRup + DRdn + DRjup + DRjdn), DRs is (DRup + DRdn),
+
+    ( (V==3, H==3, (Vs\=0; Hs\=0)); 
+      (V==3, DL==3, (Vs\=0; DLs\=0));
+      (V==3, DR==3, (Vs\=0; DRs\=0));    
+      (H==3, DL==3, (Hs\=0; DLs\=0));
+      (H==3, DR==3, (Hs\=0; DRs\=0)); 
+      (DR==3, DL==3, (DRs\=0; DLs\=0)) ) ->  true;
+    
+    bad(X,Y)->  true;
+	false.
+
+bad(X, Y):-
+    countblackstones(X, Y, 0, 1, 0, Vup), countblackstones(X, Y, 0, -1, 0, Vdn), 
+    	V1 is (Vup+Vdn),
+    countblackstones(X, Y, 1, 0, 0, Hup), countblackstones(X, Y, -1, 0, 0, Hdn),
+        H1 is (Hup+Hdn),
+    countblackstones(X, Y, 1, 1, 0, DLup), countblackstones(X, Y, -1, -1, 0, DLdn),
+        DL1 is (DLup + DLdn),
+    countblackstones(X, Y, -1, 1, 0, DRup), countblackstones(X, Y, 1, -1, 0, DRdn),
+        DR1 is (DRup+DRdn),
+
+    ( (V1==2, H1==2); (V1==2, DL1==2); (V1==2, DR1==2);
+      (H1==2, DL1==2); (H1==2, DR1==2); (DR1==2, DL1==2) ) ->  true;
+	false.
+
+
+writeAns(Ansx, Ansy):-
+    ( im_black ->  format(atom(A), "black(~a, ~a)~n", [Ansx, Ansy]);
+      im_white ->  format(atom(A), "white(~a, ~a)~n", [Ansx, Ansy])  ),
+    writeln(A).
+    
+main :-
+    read_predicates(X),
+    whoami,
+    \+nostones, process,
+    final_output, !; writeAns(8, 8), !.
